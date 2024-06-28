@@ -6,8 +6,7 @@ import ComposableArchitecture
 struct CustomAlertReducer {
     
     @ObservableState
-    struct State {
-        
+    struct State: Equatable {
         init(
             title: String,
             tapOnDimmingShouldClose: Bool = false
