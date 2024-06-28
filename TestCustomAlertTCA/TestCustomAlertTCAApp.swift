@@ -1,17 +1,13 @@
-//
-//  TestCustomAlertTCAApp.swift
-//  TestCustomAlertTCA
-//
-//  Created by Roberto Pastor on 28/6/24.
-//
-
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct TestCustomAlertTCAApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView(store: .init(initialState: .init(), reducer: {
+                MainReducer()
+            }))
         }
     }
 }
