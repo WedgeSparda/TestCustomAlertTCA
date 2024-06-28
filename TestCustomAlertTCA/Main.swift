@@ -5,40 +5,71 @@ import SwiftUI
 @Reducer
 struct MainReducer {
     
+    @Reducer(state: .equatable)
+    public enum Destination {
+        @ReducerCaseEphemeral
+        case customAlert(CustomAlertState<CustomAlert>)
+        
+        @CasePathable
+        public enum CustomAlert: Equatable {
+            case action1
+            case action2
+            case action3
+            case bottomAction
+        }
+    }
+    
     @ObservableState
     struct State {
-        @Presents var customAlert: CustomAlertReducer.State?
+        @Presents var destination: Destination.State?
     }
     
     enum Action {
-        case buttonTapped(Bool)
-        case customAlert(CustomAlertReducer.Action)
+        case showAlertButtonTapped
+        case destination(PresentationAction<Destination.Action>)
     }
     
     var body: some ReducerOf<Self> {
         
         Reduce { state, action in
             switch action {
-            case let .buttonTapped(tapOnDimmingShouldClose):
-                guard state.customAlert == nil else {
-                    return .none
-                }
-                state.customAlert = .init(
-                    title: "This is a custom alert",
-                    tapOnDimmingShouldClose: tapOnDimmingShouldClose
+            case .showAlertButtonTapped:
+                state.destination = .customAlert(
+                    .init(
+                        title: "This is a title",
+                        message: "This is a message",
+                        buttons: [
+                            .init(text: "Action 1", action: .init(action: .action1, animation: .default)),
+                            .init(text: "Action 2", action: .init(action: .action2, animation: .default)),
+                            .init(text: "Action 3", action: .init(action: .action3, animation: .default))
+                        ],
+                        bottomButton: .init(text: "Bottom Action", action: .init(action: .bottomAction, animation: .default))
+                    )
                 )
                 return .none
-                
-            case .customAlert(.closeAlert):
-                state.customAlert = nil
+                             
+            case .destination(.presented(.customAlert(.action1))):
+                print("ACTION 1")
                 return .none
                 
-            case .customAlert:
+            case .destination(.presented(.customAlert(.action2))):
+                print("ACTION 2")
+                return .none
+                
+            case .destination(.presented(.customAlert(.action3))):
+                print("ACTION 3")
+                return .none
+                
+            case .destination(.presented(.customAlert(.bottomAction))):
+                print("BOTTOM ACTION")
+                return .none
+                
+            case .destination:
                 return .none
             }
         }
-        .ifLet(\.customAlert, action: \.customAlert) {
-            CustomAlertReducer()
+        .ifLet(\.$destination, action: \.destination) {
+            Destination.body
         }
     }
 }
@@ -49,21 +80,8 @@ struct MainView: View {
     
     var body: some View {
         WithPerceptionTracking {
-            ZStack {
-                VStack {
-                    Button("Show alert") {
-                        store.send(.buttonTapped(false))
-                    }
-                    
-                    Button("Show alert with Diming Close") {
-                        store.send(.buttonTapped(true))
-                    }
-                }
-                
-                if let store = store.scope(state: \.customAlert, action: \.customAlert) {
-                    CustomAlertView(store: store)
-                }
-            }
+            Button("Show alert") { store.send(.showAlertButtonTapped, animation: .default) }
+            .customAlert($store.scope(state: \.destination?.customAlert, action: \.destination.customAlert))
         }
     }
 }
