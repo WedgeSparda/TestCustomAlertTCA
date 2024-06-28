@@ -68,9 +68,7 @@ struct MainReducer {
                 return .none
             }
         }
-        .ifLet(\.$destination, action: \.destination) {
-            Destination.body
-        }
+        .ifLet(\.$destination, action: \.destination)
     }
 }
 
